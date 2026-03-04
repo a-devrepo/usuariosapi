@@ -33,6 +33,13 @@ public class UsuarioController {
     @PostMapping("/autenticar")
     public ResponseEntity<?> autenticarUsuario(@RequestBody AutenticarUsuarioRequest usuarioRequest) {
 
-        return ResponseEntity.ok("Usuário atualizado com sucesso");
+        try {
+            var response = usuarioService.autenticar(usuarioRequest);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 }

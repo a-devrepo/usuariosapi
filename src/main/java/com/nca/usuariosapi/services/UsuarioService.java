@@ -1,5 +1,7 @@
 package com.nca.usuariosapi.services;
 
+import com.nca.usuariosapi.dtos.AutenticarUsuarioRequest;
+import com.nca.usuariosapi.dtos.AutenticarUsuarioResponse;
 import com.nca.usuariosapi.dtos.CriarUsuarioRequest;
 import com.nca.usuariosapi.dtos.CriarUsuarioResponse;
 import com.nca.usuariosapi.entities.Usuario;
@@ -25,6 +27,7 @@ public class UsuarioService {
 
         validarNome(usuarioRequest.nome());
         validarEmail(usuarioRequest.email());
+        verificarEmailExistente(usuarioRequest.email());
         validarSenha(usuarioRequest.senha());
 
         var usuario = toUsuario(usuarioRequest);
@@ -32,6 +35,31 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
 
         return toUsuarioResponse(usuario);
+    }
+
+    public AutenticarUsuarioResponse autenticar(AutenticarUsuarioRequest usuarioRequest) {
+        validarEmail(usuarioRequest.email());
+        validarSenha(usuarioRequest.senha());
+
+        var usuario =  usuarioRepository.findByEmailSenha(usuarioRequest.email(),
+                criptografar(usuarioRequest.senha()));
+
+        if (usuario == null) {
+            throw new IllegalArgumentException("Usuário não encontrado.");
+        }
+
+        return toAutenticarUsuarioResponse(usuario);
+    }
+
+    private AutenticarUsuarioResponse toAutenticarUsuarioResponse(Usuario usuario) {
+        return new AutenticarUsuarioResponse(
+                usuario.getId(),
+                usuario.getNome(),
+                usuario.getEmail(),
+                usuario.getPerfil().toString(),
+                LocalDateTime.now(),
+                "token"
+                );
     }
 
     private CriarUsuarioResponse toUsuarioResponse(Usuario usuario) {
@@ -65,7 +93,9 @@ public class UsuarioService {
         if (email == null || email.trim().isEmpty() || !email.contains("@")) {
             throw new IllegalArgumentException("O email do usuário é obrigatório e deve ser válido.");
         }
+    }
 
+    private void verificarEmailExistente(String email){
         if (usuarioRepository.findByEmail(email) != null) {
             throw new IllegalArgumentException("O email do usuário já está cadastrado. Tente outro.");
         }
