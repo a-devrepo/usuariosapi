@@ -1,0 +1,38 @@
+services:
+  db_usuarios:
+    image: postgres:16
+    container_name: postgres-bdusuarios
+    environment:
+      POSTGRES_DB: bd-usuarios
+      POSTGRES_USER: user-bdusuarios
+      POSTGRES_PASSWORD: pass-bdusuarios
+    ports:
+      - "5435:5432"
+    networks:
+      - rede-apiusuarios
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin-usuarios
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - db_usuarios
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - rede-apiusuarios
+
+networks:
+  rede-apiusuarios:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  pgadmin_data:
