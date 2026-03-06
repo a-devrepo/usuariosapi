@@ -7,17 +7,24 @@ import com.nca.usuariosapi.dtos.CriarUsuarioResponse;
 import com.nca.usuariosapi.entities.Usuario;
 import com.nca.usuariosapi.enums.Perfil;
 import com.nca.usuariosapi.repositories.UsuarioRepository;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 @Service
 public class UsuarioService {
 
     private UsuarioRepository usuarioRepository;
+
+    @Value("${jwt.secretkey}")
+    private String secretKey;
 
     public UsuarioService(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
@@ -58,7 +65,7 @@ public class UsuarioService {
                 usuario.getEmail(),
                 usuario.getPerfil().toString(),
                 LocalDateTime.now(),
-                "token"
+                gerarToken(usuario.getEmail())
                 );
     }
 
@@ -133,5 +140,14 @@ public class UsuarioService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("Erro ao gerar hash SHA-256", e);
         }
+    }
+
+    private String gerarToken(String emailUsuario){
+
+        return Jwts.builder()
+                .setSubject(emailUsuario)
+                .setIssuedAt(new Date())
+                .signWith(SignatureAlgorithm.HS256, this.secretKey)
+                .compact();
     }
 }
